@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:tutor_bot/screens/grade_process/grade_processing_screen.dart';
+import 'package:tutor_bot/screens/grade_result/grade_result_screen.dart';
+import 'package:tutor_bot/models/grade_result.dart';
 import 'dart:io';
-import 'screens/home_screen.dart';
-import 'screens/worksheet_editor_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/worksheet_editor/worksheet_editor_screen.dart';
 import 'screens/image_crop_screen.dart';
-import 'screens/region_debug_screen.dart';
-import 'screens/grade_debug_screen.dart';
+import 'screens/recent_grade/grade_details_screen.dart';
 import 'theme/app_theme.dart';
-import 'models/worksheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize shared preferences
+  await SharedPreferences.getInstance();
+
   runApp(const MyApp());
 }
 
@@ -23,40 +31,41 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const MainScreen(),
         '/worksheetEditor': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return WorksheetEditorScreen(
             imageFile: args as File?,
           );
         },
+        '/grading': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          final imageFile = args['imageFile'] as File;
+          final subject = args['subject'] as String;
+          final language = args['language'] as String;
+          return GradeProcessingScreen(
+            imageFile: imageFile,
+            subject: subject,
+            language: language,
+          );
+        },
+        '/gradeResult': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
+          final imageFile = args['imageFile'] as File;
+          final gradeResult = args['gradeResult'] as GradeResult;
+          return GradeResultScreen(
+              imageFile: imageFile, gradingResult: gradeResult);
+        },
+        '/gradeDetails': (context) {
+          final grade =
+              ModalRoute.of(context)!.settings.arguments as GradeResult;
+          return GradeDetailsScreen(grade: grade);
+        },
         '/imageCrop': (context) => ImageCropScreen(
-          imageFile: ModalRoute.of(context)!.settings.arguments as File,
-        ),
-        '/regionDebug': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          
-          // Create a worksheet from the provided image file
-          final worksheet = Worksheet(
-            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-            title: 'Debug Worksheet',
-            imageFile: args['imageFile'] as File,
-            regions: [],
-            gradeResults: [],
-            createdAt: DateTime.now(),
-          );
-          
-          return RegionDebugScreen(
-            worksheet: worksheet,
-          );
-        },
-        '/gradeDebug': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return GradeDebugScreen(
-            imageFile: args['imageFile'] as File,
-            regions: args['regions'] as List<Rect>,
-          );
-        },
+              imageFile: ModalRoute.of(context)!.settings.arguments as File,
+            ),
       },
     );
   }

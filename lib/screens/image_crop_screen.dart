@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:ui' as ui;
-import 'worksheet_editor_screen.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
 import '../utils/image_utils.dart';
+import '../widgets/worksheet_editor/crop_controls.dart';
 
 class ImageCropScreen extends StatefulWidget {
   final File imageFile;
@@ -22,9 +20,9 @@ class ImageCropScreen extends StatefulWidget {
 class _ImageCropScreenState extends State<ImageCropScreen> {
   final GlobalKey _cropKey = GlobalKey();
   final TransformationController _transformationController = TransformationController();
+  late File _imageFile;
   Offset? _startPoint;
   Offset? _endPoint;
-  bool _isCropping = false;
   bool _isLoading = false;
   
   // Image size tracking
@@ -39,6 +37,7 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   @override
   void initState() {
     super.initState();
+    _imageFile = widget.imageFile;
     _transformationController.addListener(_onTransformChanged);
     _getImageDimensions();
     
@@ -55,7 +54,6 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   void _onTransformChanged() {
     final matrix = _transformationController.value;
     final double scale = matrix.getMaxScaleOnAxis();
-    final vector_math.Vector3 translation = matrix.getTranslation();
     
     setState(() {
       _scale = scale;
@@ -64,9 +62,7 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   
   // Get image dimensions after loading
   Future<void> _getImageDimensions() async {
-    if (widget.imageFile == null) return;
-    
-    final Size size = await ImageUtils.getImageDimensions(widget.imageFile);
+    final Size size = await ImageUtils.getImageDimensions(_imageFile);
     setState(() {
       _imageSize = size;
     });
@@ -87,9 +83,6 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
       final RenderBox renderBox = _cropKey.currentContext!.findRenderObject() as RenderBox;
       final Size containerSize = renderBox.size;
       
-      debugPrint('=== Image Crop Screen - Measure Image Container ===');
-      debugPrint('Image Container Size: $containerSize');
-      
       // Only update if we have a valid size
       if (containerSize.width > 0 && containerSize.height > 0) {
         setState(() {
@@ -97,7 +90,6 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
         });
         _isMeasuring = false;
       } else {
-        debugPrint('Warning: Image container size is zero, will retry measurement');
         // Retry measurement after a short delay
         Future.delayed(const Duration(milliseconds: 200), () {
           _isMeasuring = false;
@@ -105,7 +97,6 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
         });
       }
     } else {
-      debugPrint('Warning: Could not measure image container size - context is null');
       // Retry measurement after a short delay
       Future.delayed(const Duration(milliseconds: 200), () {
         _isMeasuring = false;
@@ -141,6 +132,13 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   }
   
   Future<void> _cropImage() async {
+    debugPrint('=== Image Crop Screen - Crop Image ===');
+    debugPrint('Start Point: $_startPoint');
+    debugPrint('End Point: $_endPoint');
+    debugPrint('Image Size: $_imageSize');
+    debugPrint('Image Container Size: $_imageContainerSize');
+    debugPrint('Scale: $_scale');
+    debugPrint('Rotation: $_rotation');
     if (_startPoint == null || _endPoint == null || _imageSize == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select an area to crop')),
@@ -161,7 +159,6 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
         setState(() {
           _imageContainerSize = _imageSize;
         });
-        debugPrint('Using image size as fallback for container size: $_imageSize');
       }
     }
     
@@ -173,22 +170,13 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
       // Calculate the crop area in screen coordinates
       final Rect screenCropRect = Rect.fromPoints(_startPoint!, _endPoint!);
       
-      // Debug info
-      debugPrint('=== Image Crop Screen - Crop Image ===');
-      debugPrint('Screen Crop Rect: $screenCropRect');
-      debugPrint('Image Container Size: $_imageContainerSize');
-      debugPrint('Image Size: $_imageSize');
-      debugPrint('Scale: $_scale');
-      debugPrint('Rotation: $_rotation');
-      
       // Get the current transformation matrix
       final Matrix4 matrix = _transformationController.value;
       final vector_math.Vector3 translation = matrix.getTranslation();
-      debugPrint('Translation: $translation');
       
       // Use the utility class to crop the image
       final File croppedFile = await ImageUtils.cropImage(
-        imageFile: widget.imageFile,
+        imageFile: _imageFile,
         screenRect: screenCropRect,
         screenSize: _imageContainerSize!,
         imageSize: _imageSize!,
@@ -197,20 +185,20 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
         rotation: _rotation, // Pass the rotation angle
       );
       
-      debugPrint('Cropped Image Path: ${croppedFile.path}');
-      debugPrint('=== End Crop Image ===');
-      
       // Navigate back to WorksheetEditorScreen with the cropped image
       if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/worksheetEditor',
-          (route) => route.isFirst,
-          arguments: croppedFile,
-        );
+        setState(() {
+          _imageFile = croppedFile;
+          _imageSize = null;
+          _imageContainerSize = null;
+          _scale = 1.0;
+          _rotation = 0.0;
+          _startPoint = null;
+          _endPoint = null;
+        });
+         _getImageDimensions();
       }
     } catch (e) {
-      debugPrint('Error cropping image: $e');
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -227,52 +215,37 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   
   void _startCrop(DragStartDetails details) {
     setState(() {
-      _isCropping = true;
       _startPoint = details.localPosition;
       _endPoint = details.localPosition;
     });
-    
-    // Debug info
-    debugPrint('=== Image Crop Screen - Start Crop ===');
-    debugPrint('Start Point: $_startPoint');
-    debugPrint('Image Container Size: $_imageContainerSize');
-    debugPrint('Image Size: $_imageSize');
-    debugPrint('Scale: $_scale');
   }
   
   void _updateCrop(DragUpdateDetails details) {
     setState(() {
       _endPoint = details.localPosition;
     });
-    
-    // Debug info
-    debugPrint('=== Image Crop Screen - Update Crop ===');
-    debugPrint('End Point: $_endPoint');
-    debugPrint('Crop Rect: ${Rect.fromPoints(_startPoint!, _endPoint!)}');
   }
   
   void _endCrop(DragEndDetails details) {
     setState(() {
-      _isCropping = false;
     });
-    
-    // Debug info
-    debugPrint('=== Image Crop Screen - End Crop ===');
-    debugPrint('Final Crop Rect: ${Rect.fromPoints(_startPoint!, _endPoint!)}');
-    debugPrint('=== End Crop ===');
   }
   
   void _cancelCrop() {
     setState(() {
       _startPoint = null;
       _endPoint = null;
-      _isCropping = false;
     });
   }
   
-  void _resetTransform() {
+  void _doneEditing() {
     setState(() {
-      _transformationController.value = Matrix4.identity();
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/worksheetEditor',
+        (route) => route.isFirst,
+        arguments: _imageFile,
+      );
     });
   }
 
@@ -282,16 +255,10 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
       appBar: AppBar(
         title: const Text('Crop Image'),
         actions: [
-          if (_startPoint != null && _endPoint != null)
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _isLoading ? null : _cropImage,
-              tooltip: 'Apply Crop',
-            ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _resetTransform,
-            tooltip: 'Reset Zoom',
+            icon: const Icon(Icons.done),
+            onPressed: _doneEditing,
+            tooltip: 'Done',
           ),
         ],
       ),
@@ -302,23 +269,22 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      // We'll get the image container size from the Image widget's RenderBox
-                      // after it's rendered
-                      return InteractiveViewer(
-                        transformationController: _transformationController,
-                        clipBehavior: Clip.none,
-                        minScale: 0.5,
-                        maxScale: 4.0,
-                        child: GestureDetector(
-                          onPanStart: _startCrop,
-                          onPanUpdate: _updateCrop,
-                          onPanEnd: _endCrop,
+                      return GestureDetector(
+                        onPanStart: _startCrop,
+                        onPanUpdate: _updateCrop,
+                        onPanEnd: _endCrop,
+                        child: InteractiveViewer(
+                          transformationController: _transformationController,
+                          boundaryMargin: EdgeInsets.zero,
+                          clipBehavior: Clip.none,
+                          minScale: 0.5,
+                          maxScale: 4.0,
                           child: Stack(
                             children: [
                               Transform.rotate(
                                 angle: _rotation * (3.14159 / 180.0), // Convert degrees to radians
                                 child: Image.file(
-                                  widget.imageFile,
+                                  _imageFile,
                                   fit: BoxFit.contain,
                                   key: _cropKey,
                                   frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
@@ -353,66 +319,15 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // All rotation controls in a single row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // 90-degree rotation controls
-                          IconButton(
-                            icon: const Icon(Icons.rotate_90_degrees_ccw),
-                            onPressed: _rotateImage90CCW,
-                            tooltip: 'Reset Rotation',
-                          ),
-                          const SizedBox(width: 16),
-                          // 1-degree rotation controls
-                          IconButton(
-                            icon: const Icon(Icons.rotate_left),
-                            onPressed: () => _rotateImageBy(-1.0),
-                            tooltip: 'Rotate 1° Counterclockwise',
-                          ),
-                          Container(
-                            width: 80,
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${_rotation.toStringAsFixed(1)}°',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.rotate_right),
-                            onPressed: () => _rotateImageBy(1.0),
-                            tooltip: 'Rotate 1° Clockwise',
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            icon: const Icon(Icons.rotate_90_degrees_cw),
-                            onPressed: _rotateImage90CW,
-                            tooltip: 'Rotate 90° Clockwise',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Crop controls
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _cancelCrop,
-                            icon: const Icon(Icons.close),
-                            label: const Text('Cancel'),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: _startPoint != null && _endPoint != null
-                                ? _cropImage
-                                : null,
-                            icon: const Icon(Icons.crop),
-                            label: const Text('Crop'),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: CropControls(
+                    rotation: _rotation,
+                    onRotate90CCW: _rotateImage90CCW,
+                    onRotateLeft: () => _rotateImageBy(-1.0),
+                    onRotateRight: () => _rotateImageBy(1.0),
+                    onRotate90CW: _rotateImage90CW,
+                    onCancel: _cancelCrop,
+                    onCrop: _cropImage,
+                    canCrop: _startPoint != null && _endPoint != null,
                   ),
                 ),
               ],
