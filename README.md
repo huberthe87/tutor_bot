@@ -1,16 +1,22 @@
 # Tutor Bot
 
-A Flutter application for teachers to grade worksheets by selecting regions of interest on images.
+A Flutter application for teachers to grade worksheets using AI-powered analysis.
 
 ## Features
 
 - **Image Capture & Selection**: Take photos or select images from the gallery
 - **Image Cropping**: Crop images to focus on the worksheet
-- **Region Selection**: Select specific regions on worksheets for grading
-- **Interactive Viewing**: Zoom and pan to examine worksheets in detail
-- **Grading Tools**: Tools for processing and grading selected regions
+- **Multi-language Support**: Grade worksheets in English and Chinese
+- **Subject-specific Grading**: Specialized grading for Math, English, and Chinese Literature
+- **Interactive Region Selection**: Select and grade specific areas of worksheets
 - **AI-Powered Grading**: Uses OpenAI's Vision API to analyze and grade student work
-- **Image Hosting**: Optional ImgBB integration for efficient image handling
+- **Grade History**: View and manage past grading results
+- **Detailed Feedback**: Get comprehensive feedback including:
+  - Overall scores
+  - Question-specific analysis
+  - Step-by-step solutions for math problems
+  - Grammar and spelling checks for language subjects
+  - Expression and logic analysis for literature
 
 ## Getting Started
 
@@ -54,45 +60,45 @@ A Flutter application for teachers to grade worksheets by selecting regions of i
 
 - `lib/` - Main source code
   - `screens/` - UI screens
-  - `utils/` - Utility functions and helpers
+    - `grade_process/` - Grading process screens
+    - `grade_result/` - Results display screens
+    - `recent_grade/` - Recent grades management
+    - `worksheet_editor/` - Worksheet editing interface
+  - `services/` - Business logic and API integration
   - `models/` - Data models
   - `widgets/` - Reusable UI components
-  - `config/` - Configuration files (API keys, etc.)
+  - `config/` - Configuration files
+  - `utils/` - Utility functions
 
 ## Usage
 
 1. **Start the app** and you'll see the home screen
 2. **Select an image** by taking a photo or choosing from gallery
-3. **Crop the image** to focus on the worksheet
-4. **Enter edit mode** to select regions of interest
-5. **Draw rectangles** around areas you want to grade
-6. **Exit edit mode** when done selecting regions
-7. **Send for grading** or view the selected regions
-8. **View AI-generated feedback** for each selected region
+3. **Choose language and subject** for grading
+4. **Select regions** of the worksheet to grade
+5. **Send for grading** and wait for AI analysis
+6. **View detailed results** including:
+   - Overall score
+   - Question-by-question feedback
+   - Detailed explanations
+   - Improvement suggestions
 
 ## AI Integration
 
-This app uses OpenAI's APIs via the `dart_openai` package for:
-- **Text Analysis**: Analyzing student responses
-- **Image Recognition**: Identifying content in worksheet images
-- **Grading**: Providing automated feedback on student work
+This app uses OpenAI's APIs for:
+- **Image Analysis**: Understanding worksheet content
+- **Subject-specific Grading**: Specialized evaluation for different subjects
+- **Multi-language Support**: Processing and grading in multiple languages
+- **Detailed Feedback**: Providing comprehensive analysis and suggestions
 
-To use these features, you need a valid OpenAI API key with access to:
-- GPT-4o
+## Recent Updates
 
-## Image Handling
-
-The app supports two methods for handling images when sending them to OpenAI:
-
-1. **Base64 Encoding** (default): Images are encoded directly in the API request
-2. **ImgBB Integration** (optional): Images are uploaded to ImgBB first, and the resulting URL is used in the API request
-
-The ImgBB integration provides several benefits:
-- Reduced API request size
-- Faster processing for large images
-- Better handling of image formats
-
-To enable ImgBB integration, simply add your ImgBB API key to the configuration file.
+- Added support for Chinese language grading
+- Implemented subject-specific grading logic
+- Enhanced feedback system with detailed analysis
+- Added grade history management
+- Improved UI with animations and better visual feedback
+- Added region selection for targeted grading
 
 ## Development
 

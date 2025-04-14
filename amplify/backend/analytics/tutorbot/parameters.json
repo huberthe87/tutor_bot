@@ -1,0 +1,21 @@
+{
+    "appName": "tutorbot",
+    "roleName": "pinpointLambdaRole63302957",
+    "cloudformationPolicyName": "cloudformationPolicy63302957",
+    "cloudWatchPolicyName": "cloudWatchPolicy63302957",
+    "pinpointPolicyName": "pinpointPolicy63302957",
+    "authPolicyName": "pinpoint_amplify_63302957",
+    "unauthPolicyName": "pinpoint_amplify_63302957",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    }
+}

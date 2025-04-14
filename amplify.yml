@@ -1,0 +1,33 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - amplifyPush --simple
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - flutter pub get
+    build:
+      commands:
+        - flutter build web
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .dart_tool/
+      - .pub-cache/
+      - build/
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Cache-Control'
+          value: 'max-age=0, no-cache, no-store, must-revalidate'
+  codegen:
+    phases:
+      generate:
+        commands:
+          - amplify codegen models --output-dir lib/amplify_models 
