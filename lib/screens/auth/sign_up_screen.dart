@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'confirm_signup_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   final Future<void> Function() onSignIn;
@@ -38,6 +39,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         CognitoUserAttributeKey.email: _emailController.text.trim(),
       };
 
+      // Track sign-up attempt
+      await Amplify.Analytics.recordEvent(
+        event: AnalyticsEvent('SignUpAttempted'),
+      );
+
       final result = await Amplify.Auth.signUp(
         username: _emailController.text.trim(),
         password: _passwordController.text,
@@ -46,32 +52,50 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if (result.isSignUpComplete) {
         if (mounted) {
+          // Track successful sign-up
+          await Amplify.Analytics.recordEvent(
+            event: AnalyticsEvent('SignUpSuccessful'),
+          );
+
           // Show success message and navigate to sign in
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Account created successfully! Please sign in.'),
             ),
           );
-          // Call onSignIn to update auth state
-          await widget.onSignIn();
+          // Navigate to sign in screen
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/signin');
           }
         }
       } else {
         // Handle additional verification if needed
-        if (result.nextStep.signUpStep == CognitoSignUpStep.confirmSignUp) {
+        if (result.nextStep.signUpStep == AuthSignUpStep.confirmSignUp) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please check your email for verification code.'),
+            // Track sign-up requiring confirmation
+            await Amplify.Analytics.recordEvent(
+              event: AnalyticsEvent('SignUpRequiresConfirmation'),
+            );
+
+            // Navigate to confirmation screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ConfirmSignUpScreen(
+                  username: _emailController.text.trim(),
+                  onSignIn: widget.onSignIn,
+                ),
               ),
             );
-            // You could navigate to a verification screen here
           }
         }
       }
     } on AuthException catch (e) {
+      // Track sign-up failure
+      await Amplify.Analytics.recordEvent(
+        event: AnalyticsEvent('SignUpFailed'),
+      );
+
       setState(() {
         _errorMessage = e.message;
       });
@@ -108,12 +132,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Image.asset(
+                    'assets/icon/icon.png',
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
                     'Create Account',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),

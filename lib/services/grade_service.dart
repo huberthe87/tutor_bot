@@ -61,7 +61,7 @@ abstract class AiGradingService extends ThreadService {
       } else if (parsed is Map && parsed.containsKey('questions')) {
         questions = parsed['questions'] as List<dynamic>;
       } else {
-        throw FormatException('Invalid response format: expected array or object with questions');
+        throw const FormatException('Invalid response format: expected array or object with questions');
       }
       
       // Create a GradeResult from the parsed JSON
@@ -104,7 +104,7 @@ abstract class AiGradingService extends ThreadService {
         } else if (parsed is Map && parsed.containsKey('questions')) {
           questions = parsed['questions'] as List<dynamic>;
         } else {
-          throw FormatException('Invalid response format: expected array or object with questions');
+          throw const FormatException('Invalid response format: expected array or object with questions');
         }
         
         // Create a GradeResult from the parsed JSON

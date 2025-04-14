@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tutor_bot/screens/grade_process/grade_processing_screen.dart';
 import 'package:tutor_bot/screens/grade_result/grade_result_screen.dart';
 import 'package:tutor_bot/models/grade_result.dart';
@@ -14,6 +15,8 @@ import 'theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'amplifyconfiguration.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:provider/provider.dart';
+import 'services/language_service.dart';
 
 void main() async {
   try {
@@ -21,13 +24,17 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Initialize shared preferences
-    await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     // Initialize Amplify
     await AmplifyConfiguration.configureAmplify();
 
-    runApp(const MyApp());
+    // Set the default status bar style
+    SystemChrome.setSystemUIOverlayStyle(AppTheme.lightStatusBarStyle);
+
+    runApp(MyApp(prefs: prefs));
   } catch (e) {
+    debugPrint('Error initializing Amplify: $e');
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
@@ -39,7 +46,9 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final SharedPreferences prefs;
+
+  const MyApp({super.key, required this.prefs});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -82,64 +91,71 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Tutor Bot',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      home: _isLoading
-          ? const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            )
-          : _isSignedIn
-              ? const MainScreen()
-              : SignInScreen(onSignIn: updateAuthState),
-      routes: _isLoading
-          ? {}
-          : {
-              '/signin': (context) => SignInScreen(onSignIn: updateAuthState),
-              '/signup': (context) => SignUpScreen(onSignIn: updateAuthState),
-              '/confirm': (context) => ConfirmSignUpScreen(
-                    username: '',
-                    onSignIn: updateAuthState,
-                  ),
-              '/worksheetEditor': (context) {
-                final args = ModalRoute.of(context)?.settings.arguments;
-                return WorksheetEditorScreen(
-                  imageFile: args as File?,
-                );
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => LanguageService(widget.prefs),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Tutor Bot',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: _isLoading
+            ? const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : _isSignedIn
+                ? const MainScreen()
+                : SignInScreen(onSignIn: updateAuthState),
+        routes: _isLoading
+            ? {}
+            : {
+                '/signin': (context) => SignInScreen(onSignIn: updateAuthState),
+                '/signup': (context) => SignUpScreen(onSignIn: updateAuthState),
+                '/confirm': (context) => ConfirmSignUpScreen(
+                      username: '',
+                      onSignIn: updateAuthState,
+                    ),
+                '/worksheetEditor': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  return WorksheetEditorScreen(
+                    imageFile: args as File?,
+                  );
+                },
+                '/grading': (context) {
+                  final args = ModalRoute.of(context)!.settings.arguments
+                      as Map<String, dynamic>;
+                  final imageFile = args['imageFile'] as File;
+                  final subject = args['subject'] as String;
+                  final language = args['language'] as String;
+                  return GradeProcessingScreen(
+                    imageFile: imageFile,
+                    subject: subject,
+                    language: language,
+                  );
+                },
+                '/gradeResult': (context) {
+                  final args = ModalRoute.of(context)!.settings.arguments
+                      as Map<String, dynamic>;
+                  final imageFile = args['imageFile'] as File;
+                  final gradeResult = args['gradeResult'] as GradeResult;
+                  return GradeResultScreen(
+                      imageFile: imageFile, gradingResult: gradeResult);
+                },
+                '/gradeDetails': (context) {
+                  final grade =
+                      ModalRoute.of(context)!.settings.arguments as GradeResult;
+                  return GradeDetailsScreen(grade: grade);
+                },
+                '/imageCrop': (context) => ImageCropScreen(
+                      imageFile:
+                          ModalRoute.of(context)!.settings.arguments as File,
+                    ),
               },
-              '/grading': (context) {
-                final args = ModalRoute.of(context)!.settings.arguments
-                    as Map<String, dynamic>;
-                final imageFile = args['imageFile'] as File;
-                final subject = args['subject'] as String;
-                final language = args['language'] as String;
-                return GradeProcessingScreen(
-                  imageFile: imageFile,
-                  subject: subject,
-                  language: language,
-                );
-              },
-              '/gradeResult': (context) {
-                final args = ModalRoute.of(context)!.settings.arguments
-                    as Map<String, dynamic>;
-                final imageFile = args['imageFile'] as File;
-                final gradeResult = args['gradeResult'] as GradeResult;
-                return GradeResultScreen(
-                    imageFile: imageFile, gradingResult: gradeResult);
-              },
-              '/gradeDetails': (context) {
-                final grade =
-                    ModalRoute.of(context)!.settings.arguments as GradeResult;
-                return GradeDetailsScreen(grade: grade);
-              },
-              '/imageCrop': (context) => ImageCropScreen(
-                    imageFile:
-                        ModalRoute.of(context)!.settings.arguments as File,
-                  ),
-            },
+      ),
     );
   }
 }

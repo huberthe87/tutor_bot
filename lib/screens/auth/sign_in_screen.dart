@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'confirm_signup_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -154,6 +153,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
       debugPrint('DEBUG: Starting sign in process for user: $username');
 
+      // Track sign-in attempt
+      await Amplify.Analytics.recordEvent(
+        event: AnalyticsEvent('SignInAttempted'),
+      );
+
       // Perform sign in
       final result = await Amplify.Auth.signIn(
         username: username,
@@ -200,6 +204,11 @@ class _SignInScreenState extends State<SignInScreen> {
           debugPrint('DEBUG: Sign in successful');
           if (!mounted) return;
 
+          // Track successful sign-in
+          await Amplify.Analytics.recordEvent(
+            event: AnalyticsEvent('SignInSuccessful'),
+          );
+
           // Update auth state
           await widget.onSignIn();
 
@@ -220,6 +229,11 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('DEBUG: Exception type: ${e.runtimeType}');
       debugPrint('DEBUG: Exception message: ${e.message}');
       debugPrint('DEBUG: Exception details: ${e.toString()}');
+
+      // Track sign-in failure
+      await Amplify.Analytics.recordEvent(
+        event: AnalyticsEvent('SignInFailed'),
+      );
 
       if (!mounted) return;
 
@@ -304,12 +318,28 @@ class _SignInScreenState extends State<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Welcome Back',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Image.asset(
+                    'assets/icon/icon.png',
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Welcome to Tutor Bot',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your AI-powered teaching assistant',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onBackground
+                              .withOpacity(0.7),
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),

@@ -17,7 +17,10 @@ class GradeDetailsScreen extends StatelessWidget {
         title: Text('Grade Details - ${grade.subject}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: Icon(
+              Icons.delete,
+              color: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () => _showDeleteConfirmation(context),
           ),
         ],

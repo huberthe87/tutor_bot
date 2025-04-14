@@ -48,6 +48,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Grade History'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: Theme.of(context).primaryColor,
+            ),
+            onPressed: _loadGrades,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -67,7 +76,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                          backgroundColor:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
                           child: Text(
                             grade.score.toString(),
                             style: TextStyle(
@@ -102,4 +112,4 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
-} 
+}

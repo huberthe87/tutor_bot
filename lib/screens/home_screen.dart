@@ -9,6 +9,7 @@ import 'recent_grade/recent_grades_list.dart';
 import 'history_screen.dart';
 import 'reports_screen.dart';
 import 'profile_screen.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedTabIndex = 0;
+  final int _selectedTabIndex = 0;
 
   final List<Widget> _tabs = [
     const _HomeTab(),
@@ -29,13 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Theme.of(context).primaryColor,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
     return Scaffold(
       appBar: null,
       body: _tabs[_selectedTabIndex],
@@ -55,11 +49,27 @@ class HomeTabState extends State<_HomeTab> {
   final GradeStorageService _gradeStorage = GradeStorageService();
   final List<GradeResult> _recentGrades = [];
   bool _isLoading = true;
+  String _userEmail = 'Welcome';
 
   @override
   void initState() {
     super.initState();
     loadRecentGrades();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final user = await Amplify.Auth.getCurrentUser();
+      setState(() {
+        _userEmail = user.username;
+      });
+    } catch (e) {
+      debugPrint('Error loading user info: $e');
+      setState(() {
+        _userEmail = 'Welcome';
+      });
+    }
   }
 
   Future<void> loadRecentGrades() async {
@@ -119,70 +129,42 @@ class HomeTabState extends State<_HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              child: Text(
+                _userEmail.isNotEmpty ? _userEmail[0].toUpperCase() : 'W',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                _userEmail,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.blue,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Prof.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'John Doe',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Notifications coming soon!')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -214,8 +196,21 @@ class HomeTabState extends State<_HomeTab> {
                               width: 140,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: Colors.grey[300],
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: TextButton(
                                 onPressed: _takePhoto,
@@ -226,16 +221,17 @@ class HomeTabState extends State<_HomeTab> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                child: const Column(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.camera_alt,
-                                        color: Colors.black, size: 28),
-                                    SizedBox(height: 8),
+                                        color: Theme.of(context).primaryColor,
+                                        size: 28),
+                                    const SizedBox(height: 8),
                                     Text(
                                       'Take Photo',
                                       style: TextStyle(
-                                          color: Colors.black,
+                                          color: Theme.of(context).primaryColor,
                                           fontWeight: FontWeight.w500),
                                     ),
                                   ],
@@ -247,8 +243,21 @@ class HomeTabState extends State<_HomeTab> {
                               width: 140,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: Colors.grey[300],
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: TextButton(
                                 onPressed: _pickImage,
@@ -259,16 +268,17 @@ class HomeTabState extends State<_HomeTab> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                child: const Column(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.photo_library,
-                                        color: Colors.black, size: 28),
-                                    SizedBox(height: 8),
+                                        color: Theme.of(context).primaryColor,
+                                        size: 28),
+                                    const SizedBox(height: 8),
                                     Text(
                                       'Choose Image',
                                       style: TextStyle(
-                                          color: Colors.black,
+                                          color: Theme.of(context).primaryColor,
                                           fontWeight: FontWeight.w500),
                                     ),
                                   ],

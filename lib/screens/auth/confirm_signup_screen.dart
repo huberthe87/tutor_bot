@@ -157,7 +157,7 @@ class _ConfirmSignUpScreenState extends State<ConfirmSignUpScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'We\'ve sent a confirmation code to:',
                     textAlign: TextAlign.center,
                   ),

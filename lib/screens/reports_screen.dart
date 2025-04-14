@@ -8,6 +8,21 @@ class ReportsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reports'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.info_outline,
+              color: Theme.of(context).primaryColor,
+            ),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Reports feature is coming soon!'),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -48,4 +63,4 @@ class ReportsScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

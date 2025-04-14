@@ -15,7 +15,7 @@ class ModelConverter {
       correctAnswers: gradeResult.correctAnswers,
       timestamp: gradeResult.timestamp,
       questions:
-          gradeResult.questions?.map((q) => toAmplifyQuestion(q)).toList(),
+          gradeResult.questions.map((q) => toAmplifyQuestion(q)).toList(),
     );
   }
 

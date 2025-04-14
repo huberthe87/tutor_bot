@@ -41,14 +41,15 @@ class _GradeResultScreenState extends State<GradeResultScreen> {
       canPop: false,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           title: const Text('Grade Result'),
           automaticallyImplyLeading: false, // Remove back button
           actions: [
             IconButton(
               onPressed: _onDone,
-              icon: const Icon(Icons.done),
+              icon: Icon(
+                Icons.done,
+                color: Theme.of(context).primaryColor,
+              ),
               tooltip: 'Done',
             ),
             const SizedBox(width: 8), // Add some padding at the end

@@ -34,9 +34,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  image_picker: ^1.0.4
-  path_provider: ^2.1.1
-  http: ^1.1.0
+  image_picker: ^1.0.7
+  path_provider: ^2.1.2
+  http: ^1.2.0
   uuid: ^3.0.7
   image: ^4.0.15
   device_info_plus: ^9.1.2
@@ -47,12 +47,13 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # Amplify dependencies
-  amplify_flutter: ^1.6.0
-  amplify_auth_cognito: ^1.6.0
+  amplify_flutter: ^1.6.1
+  amplify_auth_cognito: ^1.6.1
   amplify_api: ^1.6.0
-  amplify_analytics_pinpoint: ^1.6.0
+  amplify_analytics_pinpoint: ^1.6.1
   amplify_storage_s3: ^1.6.0
   amplify_datastore: ^1.6.0
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -78,7 +79,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+    - assets/icon/tutorbot_icon.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -110,19 +112,11 @@ flutter:
 
 # Flutter Launcher Icons configuration
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
-  image_path: "assets/icon/icon.webp"
+  image_path: "assets/icon/tutorbot_icon.png"
   min_sdk_android: 21
-  web:
-    generate: true
-    image_path: "assets/icon/icon.webp"
-    background_color: "#4CB6AC"
-    theme_color: "#4CB6AC"
-  windows:
-    generate: true
-    image_path: "assets/icon/icon.webp"
-    icon_size: 48
-  macos:
-    generate: true
-    image_path: "assets/icon/icon.webp"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/tutorbot_icon.png"
+  adaptive_icon_foreground_scale: 1.0 # no need to scale further
+  remove_alpha_ios: true
