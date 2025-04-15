@@ -17,12 +17,13 @@ import 'amplifyconfiguration.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:provider/provider.dart';
 import 'services/language_service.dart';
+import 'l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
-  try {
-    // Ensure Flutter bindings are initialized
-    WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
+  try {
     // Initialize shared preferences
     final prefs = await SharedPreferences.getInstance();
 
@@ -32,16 +33,39 @@ void main() async {
     // Set the default status bar style
     SystemChrome.setSystemUIOverlayStyle(AppTheme.lightStatusBarStyle);
 
+    // Track app launch with system language
+    _trackAppLaunch();
+
     runApp(MyApp(prefs: prefs));
   } catch (e) {
-    debugPrint('Error initializing Amplify: $e');
+    debugPrint('Error initializing app: $e');
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Text("Error configuring app: ${e.toString()}"),
+          child: Text('Error initializing app: $e'),
         ),
       ),
     ));
+  }
+}
+
+Future<void> _trackAppLaunch() async {
+  try {
+    // Get the current language from the language service
+    final prefs = await SharedPreferences.getInstance();
+    final languageService = LanguageService(prefs);
+    final currentLanguage = languageService.currentLanguage;
+
+    // Create analytics event
+    final event = AnalyticsEvent('AppLaunched');
+
+    // Record the event
+    await Amplify.Analytics.recordEvent(event: event);
+
+    debugPrint(
+        'Analytics event recorded: AppLaunched with language: $currentLanguage');
+  } catch (e) {
+    debugPrint('Error recording analytics event: $e');
   }
 }
 
@@ -97,64 +121,81 @@ class _MyAppState extends State<MyApp> {
           create: (_) => LanguageService(widget.prefs),
         ),
       ],
-      child: MaterialApp(
-        title: 'Tutor Bot',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        home: _isLoading
-            ? const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            : _isSignedIn
-                ? const MainScreen()
-                : SignInScreen(onSignIn: updateAuthState),
-        routes: _isLoading
-            ? {}
-            : {
-                '/signin': (context) => SignInScreen(onSignIn: updateAuthState),
-                '/signup': (context) => SignUpScreen(onSignIn: updateAuthState),
-                '/confirm': (context) => ConfirmSignUpScreen(
-                      username: '',
-                      onSignIn: updateAuthState,
-                    ),
-                '/worksheetEditor': (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments;
-                  return WorksheetEditorScreen(
-                    imageFile: args as File?,
-                  );
-                },
-                '/grading': (context) {
-                  final args = ModalRoute.of(context)!.settings.arguments
-                      as Map<String, dynamic>;
-                  final imageFile = args['imageFile'] as File;
-                  final subject = args['subject'] as String;
-                  final language = args['language'] as String;
-                  return GradeProcessingScreen(
-                    imageFile: imageFile,
-                    subject: subject,
-                    language: language,
-                  );
-                },
-                '/gradeResult': (context) {
-                  final args = ModalRoute.of(context)!.settings.arguments
-                      as Map<String, dynamic>;
-                  final imageFile = args['imageFile'] as File;
-                  final gradeResult = args['gradeResult'] as GradeResult;
-                  return GradeResultScreen(
-                      imageFile: imageFile, gradingResult: gradeResult);
-                },
-                '/gradeDetails': (context) {
-                  final grade =
-                      ModalRoute.of(context)!.settings.arguments as GradeResult;
-                  return GradeDetailsScreen(grade: grade);
-                },
-                '/imageCrop': (context) => ImageCropScreen(
-                      imageFile:
-                          ModalRoute.of(context)!.settings.arguments as File,
-                    ),
+      child: Consumer<LanguageService>(
+        builder: (context, languageService, child) {
+          debugPrint(
+              'MaterialApp: Building with language: ${languageService.currentLanguage}');
+          return MaterialApp(
+            title: 'Tutor Bot',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            locale: Locale(languageService.currentLanguage),
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('zh'),
+            ],
+            initialRoute: '/',
+            routes: {
+              '/': (context) => _isLoading
+                  ? const Scaffold(
+                      body: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : _isSignedIn
+                      ? const MainScreen()
+                      : SignInScreen(onSignIn: updateAuthState),
+              '/signin': (context) => SignInScreen(onSignIn: updateAuthState),
+              '/signup': (context) => SignUpScreen(onSignIn: updateAuthState),
+              '/confirm': (context) => ConfirmSignUpScreen(
+                    username: '',
+                    onSignIn: updateAuthState,
+                  ),
+              '/worksheetEditor': (context) {
+                final args = ModalRoute.of(context)?.settings.arguments;
+                return WorksheetEditorScreen(
+                  imageFile: args as File?,
+                );
               },
+              '/grading': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments
+                    as Map<String, dynamic>;
+                final imageFile = args['imageFile'] as File;
+                final subject = args['subject'] as String;
+                final language = args['language'] as String;
+                return GradeProcessingScreen(
+                  imageFile: imageFile,
+                  subject: subject,
+                  language: language,
+                );
+              },
+              '/gradeResult': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments
+                    as Map<String, dynamic>;
+                final imageFile = args['imageFile'] as File;
+                final gradeResult = args['gradeResult'] as GradeResult;
+                return GradeResultScreen(
+                    imageFile: imageFile, gradingResult: gradeResult);
+              },
+              '/gradeDetails': (context) {
+                final grade =
+                    ModalRoute.of(context)!.settings.arguments as GradeResult;
+                return GradeDetailsScreen(grade: grade);
+              },
+              '/imageCrop': (context) => ImageCropScreen(
+                    imageFile:
+                        ModalRoute.of(context)!.settings.arguments as File,
+                  ),
+            },
+          );
+        },
       ),
     );
   }

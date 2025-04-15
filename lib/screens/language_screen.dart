@@ -36,7 +36,11 @@ class LanguageScreen extends StatelessWidget {
                       )
                     : null,
                 onTap: () async {
+                  debugPrint(
+                      'LanguageScreen: Setting language to $languageCode');
                   await languageService.setLanguage(languageCode);
+                  debugPrint(
+                      'LanguageScreen: Language set to ${languageService.currentLanguage}');
                   if (context.mounted) {
                     Navigator.pop(context);
                   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/grade_result.dart';
 import '../../models/subject_question.dart';
 import '../../services/grade_storage_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class GradeDetailsScreen extends StatelessWidget {
   final GradeResult grade;
@@ -10,11 +11,58 @@ class GradeDetailsScreen extends StatelessWidget {
 
   GradeDetailsScreen({super.key, required this.grade});
 
+  Future<void> _showDeleteConfirmation(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteGrade),
+        content: Text(l10n.deleteGradeConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await _gradeStorage.deleteGradeResult(grade.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.gradeDeleted)),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  l10n.errorDeletingGrade.replaceAll('{error}', e.toString())),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Grade Details - ${grade.subject}'),
+        title: Text(l10n.gradeDetails.replaceAll('{subject}', grade.subject)),
         actions: [
           IconButton(
             icon: Icon(
@@ -40,9 +88,9 @@ class GradeDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    const Text(
-                      'Score',
-                      style: TextStyle(
+                    Text(
+                      l10n.score,
+                      style: const TextStyle(
                         fontSize: 18,
                         color: Colors.grey,
                       ),
@@ -57,7 +105,8 @@ class GradeDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Graded on ${_formatDate(grade.timestamp)}',
+                      l10n.gradedOn
+                          .replaceAll('{date}', _formatDate(grade.timestamp)),
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
@@ -76,9 +125,9 @@ class GradeDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Original Image',
-                    style: TextStyle(
+                  Text(
+                    l10n.originalImage,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -114,10 +163,10 @@ class GradeDetailsScreen extends StatelessWidget {
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          'Image not available',
-                          style: TextStyle(
+                          l10n.imageNotAvailable,
+                          style: const TextStyle(
                             color: Colors.grey,
                           ),
                         ),
@@ -134,9 +183,9 @@ class GradeDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Questions',
-                    style: TextStyle(
+                  Text(
+                    l10n.questions,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -163,8 +212,8 @@ class GradeDetailsScreen extends StatelessWidget {
                                 ),
                                 child: Text(
                                   question.correct
-                                      ? '✓ Correct'
-                                      : '✗ Incorrect',
+                                      ? l10n.correct
+                                      : l10n.incorrect,
                                   style: TextStyle(
                                     color: question.correct
                                         ? Colors.green.shade800
@@ -174,18 +223,25 @@ class GradeDetailsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text('Question ${question.questionNumber}',
+                              Text(
+                                  l10n.questionNumber.replaceAll('{number}',
+                                      question.questionNumber.toString()),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold)),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text('Expression: ${question.expression}'),
-                          Text(
-                              'Student Answer: ${question.studentAnswer ?? "Not provided"}'),
-                          Text('Feedback: ${question.feedback}'),
-                          const Text('Steps:',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(l10n.expression
+                              .replaceAll('{expr}', question.expression)),
+                          Text(l10n.studentAnswer.replaceAll(
+                              '{answer}',
+                              question.studentAnswer ??
+                                  l10n.imageNotAvailable)),
+                          Text(l10n.feedback
+                              .replaceAll('{text}', question.feedback)),
+                          Text(l10n.steps,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           ...question.steps.map((step) => Text('• $step')),
                           const SizedBox(height: 12),
                         ],
@@ -208,7 +264,8 @@ class GradeDetailsScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  'Score: ${question.comprehensionScore}/10',
+                                  l10n.comprehensionScore.replaceAll('{score}',
+                                      question.comprehensionScore.toString()),
                                   style: TextStyle(
                                     color: question.comprehensionScore >= 7
                                         ? Colors.green.shade800
@@ -220,21 +277,25 @@ class GradeDetailsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text('Question ${question.questionNumber}',
+                              Text(
+                                  l10n.questionNumber.replaceAll('{number}',
+                                      question.questionNumber.toString()),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Text('Question: ${question.questionText}'),
-                          Text('Student Answer: ${question.studentAnswer}'),
+                          Text(l10n.studentAnswer
+                              .replaceAll('{answer}', question.studentAnswer)),
                           if (question.grammarErrors.isNotEmpty)
-                            Text(
-                                'Grammar Errors: ${question.grammarErrors.join(", ")}'),
+                            Text(l10n.grammarErrors.replaceAll(
+                                '{errors}', question.grammarErrors.join(", "))),
                           if (question.spellingErrors.isNotEmpty)
-                            Text(
-                                'Spelling Errors: ${question.spellingErrors.join(", ")}'),
-                          Text('Feedback: ${question.feedback}'),
+                            Text(l10n.spellingErrors.replaceAll('{errors}',
+                                question.spellingErrors.join(", "))),
+                          Text(l10n.feedback
+                              .replaceAll('{text}', question.feedback)),
                           const SizedBox(height: 12),
                         ],
                       );
@@ -256,7 +317,8 @@ class GradeDetailsScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  'Score: ${question.comprehensionScore}/10',
+                                  l10n.comprehensionScore.replaceAll('{score}',
+                                      question.comprehensionScore.toString()),
                                   style: TextStyle(
                                     color: question.comprehensionScore >= 7
                                         ? Colors.green.shade800
@@ -268,23 +330,28 @@ class GradeDetailsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text('Question ${question.questionNumber}',
+                              Text(
+                                  l10n.questionNumber.replaceAll('{number}',
+                                      question.questionNumber.toString()),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Text('Question: ${question.questionText}'),
-                          Text('Student Answer: ${question.studentAnswer}'),
+                          Text(l10n.studentAnswer
+                              .replaceAll('{answer}', question.studentAnswer)),
                           if (question.typos.isNotEmpty)
-                            Text('Typos: ${question.typos.join(", ")}'),
+                            Text(l10n.spellingErrors.replaceAll(
+                                '{errors}', question.typos.join(", "))),
                           if (question.expressionIssues.isNotEmpty)
-                            Text(
-                                'Expression Issues: ${question.expressionIssues.join(", ")}'),
+                            Text(l10n.grammarErrors.replaceAll('{errors}',
+                                question.expressionIssues.join(", "))),
                           if (question.logicIssues.isNotEmpty)
-                            Text(
-                                'Logic Issues: ${question.logicIssues.join(", ")}'),
-                          Text('Feedback: ${question.feedback}'),
+                            Text(l10n.feedback.replaceAll(
+                                '{text}', question.logicIssues.join(", "))),
+                          Text(l10n.feedback
+                              .replaceAll('{text}', question.feedback)),
                           const SizedBox(height: 12),
                         ],
                       );
@@ -294,7 +361,10 @@ class GradeDetailsScreen extends StatelessWidget {
                     }
 
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: questionWidget,
@@ -304,6 +374,7 @@ class GradeDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -311,34 +382,6 @@ class GradeDetailsScreen extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  Future<void> _showDeleteConfirmation(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Grade'),
-        content: const Text(
-            'Are you sure you want to delete this grade? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await _gradeStorage.deleteGradeResult(grade.id);
-      if (context.mounted) {
-        Navigator.of(context).pop(true); // Return true to indicate deletion
-      }
-    }
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

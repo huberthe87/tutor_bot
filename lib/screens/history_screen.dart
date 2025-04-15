@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/grade_result.dart';
 import '../services/grade_storage_service.dart';
+import '../l10n/app_localizations.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -36,8 +38,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
         _isLoading = false;
       });
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading grades: $e')),
+          SnackBar(
+              content: Text(
+                  l10n.errorLoadingGrades.replaceAll('{error}', e.toString()))),
         );
       }
     }
@@ -45,9 +50,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grade History'),
+        title: Text(l10n.gradeHistory),
         actions: [
           IconButton(
             icon: Icon(
@@ -55,16 +61,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
               color: Theme.of(context).primaryColor,
             ),
             onPressed: _loadGrades,
+            tooltip: l10n.refresh,
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _grades.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'No grades found',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    l10n.noGradesFound,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 )
               : ListView.builder(
@@ -91,7 +98,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Graded on ${_formatDate(grade.timestamp)}',
+                          '${l10n.gradedOn} ${_formatDate(grade.timestamp, context)}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -109,7 +116,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+  String _formatDate(DateTime date, BuildContext context) {
+    final locale = Localizations.localeOf(context);
+
+    // Different date formats based on locale
+    switch (locale.languageCode) {
+      case 'zh':
+        // Chinese format: YYYY年MM月DD日
+        return '${date.year}年${date.month}月${date.day}日';
+      case 'en':
+      default:
+        // English format: MMM DD, YYYY
+        return DateFormat.yMMMd(locale.toString()).format(date);
+    }
   }
 }

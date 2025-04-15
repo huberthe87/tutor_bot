@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../models/grade_result.dart';
+import '../../l10n/app_localizations.dart';
 
 class RecentGradesList extends StatelessWidget {
   final List<GradeResult> grades;
@@ -17,21 +18,20 @@ class RecentGradesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
-              'Recent Grades',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            l10n.recentGrades,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         _buildContent(context),
@@ -40,6 +40,7 @@ class RecentGradesList extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isLoading) {
       return const Center(
         child: Padding(
@@ -50,12 +51,12 @@ class RecentGradesList extends StatelessWidget {
     }
 
     if (grades.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(20.0),
           child: Text(
-            'No recent grades',
-            style: TextStyle(
+            l10n.noRecentGrades,
+            style: const TextStyle(
               fontSize: 16,
               color: Colors.grey,
             ),
@@ -63,7 +64,7 @@ class RecentGradesList extends StatelessWidget {
         ),
       );
     }
-    
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -71,7 +72,7 @@ class RecentGradesList extends StatelessWidget {
       itemBuilder: (context, index) {
         final grade = grades[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 12, top: 0),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -92,7 +93,7 @@ class RecentGradesList extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              'Graded on ${formatDate(grade.timestamp)}',
+              l10n.gradedOn.replaceAll('{date}', formatDate(grade.timestamp)),
               style: const TextStyle(
                 fontSize: 12,
               ),
@@ -110,4 +111,4 @@ class RecentGradesList extends StatelessWidget {
       },
     );
   }
-} 
+}

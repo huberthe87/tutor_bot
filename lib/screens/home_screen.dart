@@ -6,10 +6,8 @@ import '../models/grade_result.dart';
 import '../services/grade_storage_service.dart';
 import '../utils/permission_utils.dart';
 import 'recent_grade/recent_grades_list.dart';
-import 'history_screen.dart';
-import 'reports_screen.dart';
-import 'profile_screen.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
+import '../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,21 +17,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final int _selectedTabIndex = 0;
-
-  final List<Widget> _tabs = [
-    const _HomeTab(),
-    const HistoryScreen(),
-    const ReportsScreen(),
-    const ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: null,
-      body: _tabs[_selectedTabIndex],
-    );
+    return const _HomeTab();
   }
 }
 
@@ -67,7 +53,7 @@ class HomeTabState extends State<_HomeTab> {
     } catch (e) {
       debugPrint('Error loading user info: $e');
       setState(() {
-        _userEmail = 'Welcome';
+        _userEmail = AppLocalizations.of(context)!.welcome;
       });
     }
   }
@@ -91,7 +77,13 @@ class HomeTabState extends State<_HomeTab> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading grades: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!
+                  .errorLoadingGrades
+                  .replaceAll('{error}', e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -129,6 +121,7 @@ class HomeTabState extends State<_HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -180,12 +173,16 @@ class HomeTabState extends State<_HomeTab> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Text('Quick Grade',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
+                            Text(
+                              l10n.quickGrade,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -199,46 +196,30 @@ class HomeTabState extends State<_HomeTab> {
                                 color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Theme.of(context)
-                                      .primaryColor
-                                      .withOpacity(0.3),
-                                  width: 1.5,
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
                               child: TextButton(
                                 onPressed: _takePhoto,
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.camera_alt,
-                                        color: Theme.of(context).primaryColor,
-                                        size: 28),
-                                    const SizedBox(height: 8),
+                                    Icon(
+                                      Icons.camera_alt,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      'Take Photo',
+                                      l10n.takePhoto,
                                       style: TextStyle(
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.w500),
+                                        color: Theme.of(context).primaryColor,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 20),
+                            const SizedBox(width: 16),
                             Container(
                               width: 140,
                               height: 80,
@@ -246,40 +227,24 @@ class HomeTabState extends State<_HomeTab> {
                                 color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Theme.of(context)
-                                      .primaryColor
-                                      .withOpacity(0.3),
-                                  width: 1.5,
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
                               child: TextButton(
                                 onPressed: _pickImage,
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.photo_library,
-                                        color: Theme.of(context).primaryColor,
-                                        size: 28),
-                                    const SizedBox(height: 8),
+                                    Icon(
+                                      Icons.photo_library,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      'Choose Image',
+                                      l10n.pickImage,
                                       style: TextStyle(
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.w500),
+                                        color: Theme.of(context).primaryColor,
+                                      ),
                                     ),
                                   ],
                                 ),

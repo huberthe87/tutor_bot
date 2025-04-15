@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'confirm_signup_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class SignInScreen extends StatefulWidget {
   final Future<void> Function() onSignIn;
@@ -28,7 +29,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final username = _emailController.text.trim();
     if (username.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter your email address';
+        _errorMessage = AppLocalizations.of(context)!.pleaseEnterEmail;
       });
       return;
     }
@@ -48,8 +49,8 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('DEBUG: Confirmation code resent successfully');
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Confirmation code has been resent to your email'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.confirmationCodeSent),
         ),
       );
     } on AuthException catch (e) {
@@ -65,8 +66,7 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('DEBUG: Error type: ${e.runtimeType}');
       if (!mounted) return;
       setState(() {
-        _errorMessage =
-            'An unexpected error occurred while resending the code.';
+        _errorMessage = AppLocalizations.of(context)!.unexpectedResendError;
       });
     } finally {
       if (mounted) {
@@ -83,7 +83,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
     if (code.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter the confirmation code';
+        _errorMessage =
+            AppLocalizations.of(context)!.pleaseEnterConfirmationCode;
       });
       return;
     }
@@ -110,8 +111,8 @@ class _SignInScreenState extends State<SignInScreen> {
           _showConfirmationCode = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email confirmed successfully! Please sign in.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.emailConfirmed),
           ),
         );
       }
@@ -125,7 +126,7 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('DEBUG: Unexpected error during confirmation: $e');
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
+        _errorMessage = AppLocalizations.of(context)!.unexpectedError;
       });
     } finally {
       if (mounted) {
@@ -172,8 +173,7 @@ class _SignInScreenState extends State<SignInScreen> {
         case AuthSignInStep.confirmSignInWithNewPassword:
           debugPrint('DEBUG: User needs to set a new password');
           setState(() {
-            _errorMessage =
-                'You need to set a new password. Please contact support.';
+            _errorMessage = AppLocalizations.of(context)!.newPasswordRequired;
           });
           break;
 
@@ -195,13 +195,14 @@ class _SignInScreenState extends State<SignInScreen> {
         case AuthSignInStep.confirmSignInWithCustomChallenge:
           debugPrint('DEBUG: User needs to complete a custom challenge');
           setState(() {
-            _errorMessage = 'Please complete the custom challenge.';
+            _errorMessage =
+                AppLocalizations.of(context)!.customChallengeRequired;
           });
-          // Here you would typically navigate to a screen to complete the challenge
           break;
 
         case AuthSignInStep.done:
-          debugPrint('DEBUG: Sign in successful');
+          debugPrint(
+              'DEBUG: ${AppLocalizations.of(context)!.signInSuccessful}');
           if (!mounted) return;
 
           // Track successful sign-in
@@ -221,7 +222,7 @@ class _SignInScreenState extends State<SignInScreen> {
           debugPrint(
               'DEBUG: Unexpected sign-in step: ${result.nextStep.signInStep}');
           setState(() {
-            _errorMessage = 'An unexpected error occurred during sign-in.';
+            _errorMessage = AppLocalizations.of(context)!.unexpectedSignInError;
           });
       }
     } on AuthException catch (e) {
@@ -238,7 +239,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
 
       // Check if the error message indicates user not confirmed
-      if (e.message.contains('User is not confirmed')) {
+      if (e.message.contains(AppLocalizations.of(context)!.userNotConfirmed)) {
         debugPrint('DEBUG: User not confirmed detected from error message');
         // Show resend confirmation code option
         if (!mounted) return;
@@ -249,16 +250,16 @@ class _SignInScreenState extends State<SignInScreen> {
             context: context,
             barrierDismissible: false,
             builder: (context) => AlertDialog(
-              title: const Text('Email Not Confirmed'),
-              content: const Text(
-                  'Your email address has not been confirmed. Would you like to resend the confirmation code?'),
+              title: Text(AppLocalizations.of(context)!.emailNotConfirmed),
+              content:
+                  Text(AppLocalizations.of(context)!.emailNotConfirmedMessage),
               actions: [
                 TextButton(
                   onPressed: () {
                     debugPrint('DEBUG: User cancelled resend code');
                     Navigator.pop(context);
                   },
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 TextButton(
                   onPressed: () {
@@ -266,7 +267,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     Navigator.pop(context);
                     _resendConfirmationCode();
                   },
-                  child: const Text('Resend Code'),
+                  child: Text(AppLocalizations.of(context)!.resendCode),
                 ),
               ],
             ),
@@ -286,7 +287,7 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('DEBUG: Error details: $e');
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
+        _errorMessage = AppLocalizations.of(context)!.unexpectedError;
       });
     } finally {
       if (mounted) {
@@ -307,6 +308,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -325,7 +327,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Welcome to Tutor Bot',
+                    l10n.welcomeMessage,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -333,7 +335,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Your AI-powered teaching assistant',
+                    l10n.appTagline,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
@@ -345,14 +347,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return l10n.pleaseEnterEmail;
                       }
                       return null;
                     },
@@ -360,14 +362,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return l10n.pleaseEnterPassword;
                       }
                       return null;
                     },
@@ -376,14 +378,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _confirmationCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirmation Code',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.confirmationCode,
+                        border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter the confirmation code';
+                          return l10n.pleaseEnterConfirmationCode;
                         }
                         return null;
                       },
@@ -411,7 +413,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text('Confirm Sign Up'),
+                          : Text(l10n.signUp),
                     )
                   else
                     ElevatedButton(
@@ -424,12 +426,12 @@ class _SignInScreenState extends State<SignInScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text('Sign In'),
+                          : Text(l10n.signIn),
                     ),
                   if (_isResendingCode) ...[
                     const SizedBox(height: 16),
-                    const Center(
-                      child: Text('Resending confirmation code...'),
+                    Center(
+                      child: Text(l10n.resendingConfirmationCode),
                     ),
                   ],
                   const SizedBox(height: 16),
@@ -437,7 +439,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     onPressed: () {
                       Navigator.pushNamed(context, '/signup');
                     },
-                    child: const Text('Don\'t have an account? Sign Up'),
+                    child: Text(l10n.dontHaveAccount),
                   ),
                 ],
               ),

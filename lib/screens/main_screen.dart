@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'reports_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -34,26 +35,27 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: l10n.home,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
+            icon: const Icon(Icons.history),
+            label: l10n.history,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Reports',
+            icon: const Icon(Icons.analytics),
+            label: l10n.reports,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person),
+            label: l10n.profile,
           ),
         ],
         currentIndex: _selectedIndex,

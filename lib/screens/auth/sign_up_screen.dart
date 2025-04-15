@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'confirm_signup_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class SignUpScreen extends StatefulWidget {
   final Future<void> Function() onSignIn;
@@ -24,9 +25,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
 
   Future<void> _signUp() async {
-    // Hide keyboard
-    FocusScope.of(context).unfocus();
-
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -39,11 +37,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         CognitoUserAttributeKey.email: _emailController.text.trim(),
       };
 
-      // Track sign-up attempt
-      await Amplify.Analytics.recordEvent(
-        event: AnalyticsEvent('SignUpAttempted'),
-      );
-
       final result = await Amplify.Auth.signUp(
         username: _emailController.text.trim(),
         password: _passwordController.text,
@@ -51,51 +44,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (result.isSignUpComplete) {
-        if (mounted) {
-          // Track successful sign-up
-          await Amplify.Analytics.recordEvent(
-            event: AnalyticsEvent('SignUpSuccessful'),
-          );
-
-          // Show success message and navigate to sign in
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully! Please sign in.'),
-            ),
-          );
-          // Navigate to sign in screen
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/signin');
-          }
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.accountCreated)),
+        );
+        Navigator.pushReplacementNamed(context, '/signin');
       } else {
-        // Handle additional verification if needed
-        if (result.nextStep.signUpStep == AuthSignUpStep.confirmSignUp) {
-          if (mounted) {
-            // Track sign-up requiring confirmation
-            await Amplify.Analytics.recordEvent(
-              event: AnalyticsEvent('SignUpRequiresConfirmation'),
-            );
-
-            // Navigate to confirmation screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ConfirmSignUpScreen(
-                  username: _emailController.text.trim(),
-                  onSignIn: widget.onSignIn,
-                ),
-              ),
-            );
-          }
-        }
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConfirmSignUpScreen(
+              username: _emailController.text.trim(),
+              onSignIn: widget.onSignIn,
+            ),
+          ),
+        );
       }
     } on AuthException catch (e) {
-      // Track sign-up failure
-      await Amplify.Analytics.recordEvent(
-        event: AnalyticsEvent('SignUpFailed'),
-      );
-
       setState(() {
         _errorMessage = e.message;
       });
@@ -118,9 +84,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: Text(l10n.signUp),
       ),
       body: SafeArea(
         child: Center(
@@ -139,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Create Account',
+                    l10n.createAccount,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -148,17 +115,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return l10n.pleaseEnterEmail;
                       }
                       if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return l10n.pleaseEnterValidEmail;
                       }
                       return null;
                     },
@@ -166,17 +133,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return l10n.pleaseEnterPassword;
                       }
                       if (value.length < 8) {
-                        return 'Password must be at least 8 characters';
+                        return l10n.passwordMinLength;
                       }
                       return null;
                     },
@@ -184,17 +151,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _confirmPasswordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm Password',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.confirmPassword,
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return l10n.pleaseConfirmPassword;
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return l10n.passwordsDontMatch;
                       }
                       return null;
                     },
@@ -217,14 +184,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator()
-                        : const Text('Sign Up'),
+                        : Text(l10n.signUp),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, '/signin');
                     },
-                    child: const Text('Already have an account? Sign In'),
+                    child: Text(l10n.alreadyHaveAccount),
                   ),
                 ],
               ),

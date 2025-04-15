@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports'),
+        title: Text(l10n.reports),
         actions: [
           IconButton(
             icon: Icon(
@@ -16,8 +18,8 @@ class ReportsScreen extends StatelessWidget {
             ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Reports feature is coming soon!'),
+                SnackBar(
+                  content: Text(l10n.reportsFeatureComingSoon),
                 ),
               );
             },
@@ -34,26 +36,26 @@ class ReportsScreen extends StatelessWidget {
               color: Theme.of(context).primaryColor.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Reports Coming Soon',
-              style: TextStyle(
+            Text(
+              l10n.reportsComingSoon,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'This feature is under construction.',
-              style: TextStyle(
+            Text(
+              l10n.reportsUnderConstruction,
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Check back later for detailed analytics and reports.',
+            Text(
+              l10n.reportsCheckBack,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
               ),
